@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Spotimer</string>
+
+    <string name="artist_hint">Artist name</string>
+    <string name="track_hint">Track title</string>
+    <string name="search_spotify">Search</string>
+</resources>
