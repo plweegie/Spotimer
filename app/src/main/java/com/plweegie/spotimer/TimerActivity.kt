@@ -26,6 +26,7 @@ class TimerActivity : AppCompatActivity() {
     private lateinit var mTrackId: String
     private var mCounterState: Long? = null
     private var mCounting: Boolean? = null
+    private var mTrackTempo: Float? = 0.0F
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,6 +36,7 @@ class TimerActivity : AppCompatActivity() {
 
         if (mCounting!!) {
             mCounterState = savedInstanceState?.getLong(COUNTER_POSITION)
+            mTrackTempo = savedInstanceState?.getFloat(TRACK_TEMPO)
         }
 
         val prefs = PreferenceManager.getDefaultSharedPreferences(this)
@@ -50,6 +52,7 @@ class TimerActivity : AppCompatActivity() {
             getTrackInfoFromAPI(mToken)
         } else {
             startTimer(mCounterState!!)
+            startAnimation(mTrackTempo!!, mCounterState!!)
         }
     }
 
@@ -57,6 +60,7 @@ class TimerActivity : AppCompatActivity() {
         super.onSaveInstanceState(outState)
         outState?.putBoolean(COUNTING_STATE, mCounting!!)
         outState?.putLong(COUNTER_POSITION, mCounterState!!)
+        outState?.putFloat(TRACK_TEMPO, mTrackTempo!!)
     }
 
     private fun getTrackInfoFromAPI(token: String) {
@@ -67,11 +71,11 @@ class TimerActivity : AppCompatActivity() {
             override fun onResponse(call: Call<AudioFeatures>?, response: Response<AudioFeatures>?) {
                 val trackFeatures = response?.body()
                 mCounterState = trackFeatures!!.duration
-                val tempo = trackFeatures?.tempo
+                mTrackTempo = trackFeatures?.tempo
 
                 mCounting = true
                 startTimer(mCounterState!!)
-                startAnimation(tempo, mCounterState!!)
+                startAnimation(mTrackTempo!!, mCounterState!!)
             }
 
             override fun onFailure(call: Call<AudioFeatures>?, t: Throwable?) {
@@ -118,6 +122,7 @@ class TimerActivity : AppCompatActivity() {
         const val TRACK_ID_EXTRA = "track_id"
         const val COUNTING_STATE = "is_counting"
         const val COUNTER_POSITION = "counter_position"
+        const val TRACK_TEMPO = "track_tempo"
 
         fun newIntent(context: Context, trackId: String?): Intent? {
             val intent = Intent(context, TimerActivity::class.java)
