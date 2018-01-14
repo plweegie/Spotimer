@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.preference.PreferenceManager
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
+import com.plweegie.spotimer.models.AudioFeatures
 import com.plweegie.spotimer.models.SpotifyTrack
 import com.plweegie.spotimer.rest.RestClient
 import com.plweegie.spotimer.rest.SpotifyService
@@ -87,11 +88,27 @@ class MainActivity : AppCompatActivity() {
                 val items = response?.body()?.tracks?.items
                 Log.d("Main Activity", response?.message().toString())
                 Log.d("MainActivity", items?.size.toString())
-                val trackId = items?.first()?.id
+                val trackId = items?.first()!!.id
                 Log.d("MainActivity", "Track ID " + trackId)
 
-                val intent = TimerActivity.newIntent(applicationContext, trackId)
-                startActivity(intent)
+                val callForDuration = mService.getFeatures("Bearer $token", trackId)
+
+                callForDuration.enqueue(object: Callback<AudioFeatures> {
+                    override fun onResponse(call: Call<AudioFeatures>?,
+                                            response: Response<AudioFeatures>?) {
+                        val trackFeatures = response?.body()
+                        val trackDuration = trackFeatures!!.duration
+                        val trackTempo = trackFeatures?.tempo
+
+                        val intent = TimerActivity.newIntent(applicationContext,
+                                trackId, trackDuration, trackTempo)
+                        startActivity(intent)
+                    }
+
+                    override fun onFailure(call: Call<AudioFeatures>?, t: Throwable?) {
+                        Log.e("MainActivity", "Retrofit error " + t)
+                    }
+                })
             }
         })
     }

@@ -2,100 +2,50 @@ package com.plweegie.spotimer
 
 import android.animation.ObjectAnimator
 import android.animation.PropertyValuesHolder
+import android.arch.lifecycle.Observer
+import android.arch.lifecycle.ViewModelProviders
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.os.CountDownTimer
-import android.preference.PreferenceManager
 import android.support.v7.app.AppCompatActivity
-import android.util.Log
 import com.plweegie.spotimer.extensions.toDurationString
-import com.plweegie.spotimer.models.AudioFeatures
-import com.plweegie.spotimer.rest.RestClient
-import com.plweegie.spotimer.rest.SpotifyService
+import com.plweegie.spotimer.viewmodels.LiveDataTimerViewModel
+import com.plweegie.spotimer.viewmodels.LiveDataTimerViewModelFactory
 import kotlinx.android.synthetic.main.activity_timer.*
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 
 
 class TimerActivity : AppCompatActivity() {
 
-    private lateinit var mToken: String
-    private lateinit var mService: SpotifyService
-    private lateinit var mTrackId: String
+    private lateinit var mLiveDataTimerViewModel: LiveDataTimerViewModel
+
     private var mCounterState: Long? = null
-    private var mCounting: Boolean? = null
     private var mTrackTempo: Float? = 0.0F
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_timer)
 
-        mCounting = savedInstanceState?.getBoolean(COUNTING_STATE) ?: false
+        mCounterState = intent.getLongExtra(TRACK_DURATION_EXTRA, 0L)
+        mTrackTempo = intent.getFloatExtra(TRACK_TEMPO_EXTRA, 0.0f)
 
-        if (mCounting!!) {
-            mCounterState = savedInstanceState?.getLong(COUNTER_POSITION)
-            mTrackTempo = savedInstanceState?.getFloat(TRACK_TEMPO)
+        mCounterState?.let {
+            val vmFactory = LiveDataTimerViewModelFactory(it)
+            mLiveDataTimerViewModel = ViewModelProviders.of(this, vmFactory)
+                    .get(LiveDataTimerViewModel::class.java)
         }
+        subscribe()
 
-        val prefs = PreferenceManager.getDefaultSharedPreferences(this)
-        mToken = prefs.getString(RestClient.TOKEN_PREF, null)
-        mTrackId = intent.getStringExtra(TRACK_ID_EXTRA)
-
-        mService = RestClient(this).mApiService
+        startAnimation(mTrackTempo!!, mCounterState!!)
     }
 
-    override fun onStart() {
-        super.onStart()
-        if (!mCounting!!) {
-            getTrackInfoFromAPI(mToken)
-        } else {
-            startTimer(mCounterState!!)
-            startAnimation(mTrackTempo!!, mCounterState!!)
+    private fun subscribe() {
+        val elapsedTimeObserver = Observer<Long> {
+            if (it == -1L) {
+                finish()
+            }
+            timer_textview.text = it?.toDurationString()
         }
-    }
-
-    override fun onSaveInstanceState(outState: Bundle?) {
-        super.onSaveInstanceState(outState)
-        outState?.putBoolean(COUNTING_STATE, mCounting!!)
-        outState?.putLong(COUNTER_POSITION, mCounterState!!)
-        outState?.putFloat(TRACK_TEMPO, mTrackTempo!!)
-    }
-
-    private fun getTrackInfoFromAPI(token: String) {
-
-        val call = mService.getFeatures("Bearer $token", mTrackId)
-
-        call.enqueue(object: Callback<AudioFeatures> {
-            override fun onResponse(call: Call<AudioFeatures>?, response: Response<AudioFeatures>?) {
-                val trackFeatures = response?.body()
-                mCounterState = trackFeatures!!.duration
-                mTrackTempo = trackFeatures?.tempo
-
-                mCounting = true
-                startTimer(mCounterState!!)
-                startAnimation(mTrackTempo!!, mCounterState!!)
-            }
-
-            override fun onFailure(call: Call<AudioFeatures>?, t: Throwable?) {
-                Log.e("MainActivity", "Retrofit error " + t)
-            }
-        })
-    }
-
-    private fun startTimer(duration: Long) {
-       val timer = object: CountDownTimer(duration, 1000) {
-           override fun onFinish() {
-               mCounting = false
-               finish()
-           }
-
-           override fun onTick(millisUntilFinished: Long) {
-               timer_textview.text = millisUntilFinished.toDurationString()
-               mCounterState = millisUntilFinished
-           }
-       }.start()
+        mLiveDataTimerViewModel.getRemainingTime().observe(this, elapsedTimeObserver)
     }
 
     private fun startAnimation(tempo: Float, duration: Long) {
@@ -119,14 +69,16 @@ class TimerActivity : AppCompatActivity() {
 
     companion object {
 
-        const val TRACK_ID_EXTRA = "track_id"
-        const val COUNTING_STATE = "is_counting"
-        const val COUNTER_POSITION = "counter_position"
-        const val TRACK_TEMPO = "track_tempo"
+        private const val TRACK_ID_EXTRA = "track_id"
+        private const val TRACK_DURATION_EXTRA = "track_duration"
+        private const val TRACK_TEMPO_EXTRA = "track_tempo_extra"
 
-        fun newIntent(context: Context, trackId: String?): Intent? {
+        fun newIntent(context: Context, trackId: String?, trackDuration: Long,
+                      trackTempo: Float): Intent? {
             val intent = Intent(context, TimerActivity::class.java)
             intent.putExtra(TRACK_ID_EXTRA, trackId)
+            intent.putExtra(TRACK_DURATION_EXTRA, trackDuration)
+            intent.putExtra(TRACK_TEMPO_EXTRA, trackTempo)
             return intent
         }
     }
