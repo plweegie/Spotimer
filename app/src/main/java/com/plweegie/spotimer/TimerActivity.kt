@@ -69,14 +69,11 @@ class TimerActivity : AppCompatActivity() {
 
     companion object {
 
-        private const val TRACK_ID_EXTRA = "track_id"
         private const val TRACK_DURATION_EXTRA = "track_duration"
         private const val TRACK_TEMPO_EXTRA = "track_tempo_extra"
 
-        fun newIntent(context: Context, trackId: String?, trackDuration: Long,
-                      trackTempo: Float): Intent? {
+        fun newIntent(context: Context, trackDuration: Long, trackTempo: Float): Intent? {
             val intent = Intent(context, TimerActivity::class.java)
-            intent.putExtra(TRACK_ID_EXTRA, trackId)
             intent.putExtra(TRACK_DURATION_EXTRA, trackDuration)
             intent.putExtra(TRACK_TEMPO_EXTRA, trackTempo)
             return intent

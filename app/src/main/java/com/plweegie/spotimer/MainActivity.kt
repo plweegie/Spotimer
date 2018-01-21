@@ -101,7 +101,7 @@ class MainActivity : AppCompatActivity() {
                         val trackTempo = trackFeatures?.tempo
 
                         val intent = TimerActivity.newIntent(applicationContext,
-                                trackId, trackDuration, trackTempo)
+                                trackDuration, trackTempo)
                         startActivity(intent)
                     }
 
