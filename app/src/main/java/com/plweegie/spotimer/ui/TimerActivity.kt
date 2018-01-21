@@ -1,4 +1,4 @@
-package com.plweegie.spotimer
+package com.plweegie.spotimer.ui
 
 import android.animation.ObjectAnimator
 import android.animation.PropertyValuesHolder
@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
+import com.plweegie.spotimer.R
 import com.plweegie.spotimer.extensions.toDurationString
 import com.plweegie.spotimer.viewmodels.LiveDataTimerViewModel
 import com.plweegie.spotimer.viewmodels.LiveDataTimerViewModelFactory

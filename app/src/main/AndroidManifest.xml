@@ -6,13 +6,14 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
+        android:name=".MyApp"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".MainActivity">
+        <activity android:name=".ui.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -20,8 +21,8 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".TimerActivity"
-            android:parentActivityName=".MainActivity" />
+        <activity android:name=".ui.TimerActivity"
+            android:parentActivityName=".ui.MainActivity" />
 
         <activity
             android:name="com.spotify.sdk.android.authentication.LoginActivity"
